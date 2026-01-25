@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject, forwardRef, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { IndexingService } from '../search/indexing.service';
+import { NoteEventProducer } from '../kafka/producers/note-event.producer';
 
 export interface CreateNoteDto {
   title: string;
@@ -19,10 +20,13 @@ export interface UpdateNoteDto {
 
 @Injectable()
 export class NotesService {
+  private readonly logger = new Logger(NotesService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     @Inject(forwardRef(() => IndexingService))
     private readonly indexing: IndexingService,
+    private readonly noteEventProducer: NoteEventProducer,
   ) {}
 
   private isDbAvailable(): boolean {
@@ -120,10 +124,24 @@ export class NotesService {
       include: { tags: { include: { tag: true } } },
     });
 
-    // Index note asynchronously
-    this.indexing.indexNote(note.id).catch(err =>
-      console.error('Indexing failed:', err)
-    );
+    // Publish note created event to Kafka (triggers indexing via consumer)
+    const published = await this.noteEventProducer.publishNoteCreated({
+      noteId: note.id,
+      userId: note.userId,
+      title: note.title,
+      content: note.content,
+      tags: tagIds,
+      sessionCode: sessionCode || undefined,
+      source: 'api',
+    });
+
+    // Fallback to direct indexing if Kafka is unavailable
+    if (!published) {
+      this.logger.warn(`Kafka unavailable, falling back to direct indexing for note ${note.id}`);
+      this.indexing.indexNote(note.id).catch(err =>
+        this.logger.error(`Fallback indexing failed for note ${note.id}:`, err),
+      );
+    }
 
     return note;
   }
@@ -144,6 +162,13 @@ export class NotesService {
     
     try {
       const { title, content, tagIds, sessionCode } = input;
+
+      // Get previous content for event sourcing (audit trail)
+      const previousNote = await this.prisma.note.findUnique({
+        where: { id },
+        select: { content: true, userId: true },
+      });
+
       const updated = await this.prisma.note.update({
         where: { id },
         data: {
@@ -163,10 +188,24 @@ export class NotesService {
         include: { tags: { include: { tag: true } } },
       });
 
-      // Reindex note asynchronously
-      this.indexing.indexNote(id).catch(err =>
-        console.error('Reindexing failed:', err)
-      );
+      // Publish note updated event to Kafka (triggers reindexing via consumer)
+      const published = await this.noteEventProducer.publishNoteUpdated({
+        noteId: id,
+        userId: updated.userId,
+        title,
+        content,
+        previousContent: previousNote?.content,
+        tags: tagIds,
+        source: 'api',
+      });
+
+      // Fallback to direct reindexing if Kafka is unavailable
+      if (!published) {
+        this.logger.warn(`Kafka unavailable, falling back to direct reindexing for note ${id}`);
+        this.indexing.indexNote(id).catch(err =>
+          this.logger.error(`Fallback reindexing failed for note ${id}:`, err),
+        );
+      }
 
       return updated;
     } catch (error) {
@@ -199,18 +238,35 @@ export class NotesService {
       // Return mock deletion when DB is not available
       return { id: id, message: 'Mock note deleted' };
     }
-    
+
     try {
+      // Get note info before deletion for event
+      const note = await this.prisma.note.findUnique({
+        where: { id },
+        select: { userId: true },
+      });
+
       await this.prisma.note.delete({ where: { id } });
-      
-      // Delete from index asynchronously
-      this.indexing.deleteNoteFromIndex(id).catch(err =>
-        console.error('Index deletion failed:', err)
-      );
-      
+
+      // Publish note deleted event to Kafka (triggers index deletion via consumer)
+      if (note) {
+        const published = await this.noteEventProducer.publishNoteDeleted({
+          noteId: id,
+          userId: note.userId,
+        });
+
+        // Fallback to direct index deletion if Kafka is unavailable
+        if (!published) {
+          this.logger.warn(`Kafka unavailable, falling back to direct index deletion for note ${id}`);
+          this.indexing.deleteNoteFromIndex(id).catch(err =>
+            this.logger.error(`Fallback index deletion failed for note ${id}:`, err),
+          );
+        }
+      }
+
       return { id };
     } catch (error) {
-      console.error('Database error, falling back to mock data:', error.message);
+      this.logger.error('Database error, falling back to mock data:', error);
       return { id: id, message: 'Mock note deleted' };
     }
   }

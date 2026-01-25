@@ -1,344 +1,62 @@
-# ScribblyAi - AI-Powered Memory Assistant
+# ScribblyAi
 
 <div align="center">
 
-![ScribblyAi Banner](https://img.shields.io/badge/ScribblyAi-AI%20Memory%20Assistant-6366f1?style=for-the-badge)
-[![MIT License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
+![ScribblyAi](https://img.shields.io/badge/ScribblyAi-AI%20Memory%20Assistant-6366f1?style=for-the-badge&logoColor=white)
+![Version](https://img.shields.io/badge/version-1.0.0-blue?style=for-the-badge)
+[![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
+
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![NestJS](https://img.shields.io/badge/NestJS-10-E0234E?style=for-the-badge&logo=nestjs)](https://nestjs.com/)
+[![Kafka](https://img.shields.io/badge/Apache%20Kafka-231F20?style=for-the-badge&logo=apachekafka)](https://kafka.apache.org/)
+[![Spark](https://img.shields.io/badge/Apache%20Spark-E25A1C?style=for-the-badge&logo=apachespark&logoColor=white)](https://spark.apache.org/)
+[![Elasticsearch](https://img.shields.io/badge/Elasticsearch-005571?style=for-the-badge&logo=elasticsearch)](https://elastic.co/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://postgresql.org/)
 
-**Built for Elastic Challenge Hackathon**
-
-*Your intelligent second brain that searches across notes, Gmail, Drive, and more using AI-powered hybrid search*
-
-[Live Demo](https://scribble-ai-ten.vercel.app) · [Report Bug](https://github.com/Aadhavm10/ScribbleAi/issues) · [Request Feature](https://github.com/Aadhavm10/ScribbleAi/issues)
+[Live Demo](https://scribble-ai-ten.vercel.app) · [Report Bug](https://github.com/Aadhavm10/ScribbleAi/issues)
 
 </div>
-
----
-
-## Table of Contents
-
-- [Project Goals](#project-goals)
-- [Why We Built This](#why-we-built-this)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Architecture](#architecture)
-- [Getting Started](#getting-started)
-- [Project Structure](#project-structure)
-- [How It Works](#how-it-works)
-- [Future Integrations](#future-integrations)
-- [Contributing](#contributing)
-- [License](#license)
-
----
-
-## Project Goals
-
-ScribblyAi aims to demonstrate enterprise-grade distributed systems architecture through:
-
-**Core Objectives:**
-- Build a real-time collaborative note-taking platform with live multi-user editing
-- Implement event-driven architecture using Apache Kafka for scalable event streaming
-- Process real-time analytics with Apache Spark Streaming for instant insights
-- Deploy production-ready infrastructure on AWS with proper monitoring and observability
-- Showcase hybrid search combining keyword (BM25) and semantic (vector) search using Elasticsearch
-
-**Technical Learning:**
-- Master distributed systems patterns (event sourcing, CQRS, eventual consistency)
-- Gain hands-on experience with Kafka, Spark, and cloud-native deployment
-- Implement WebSocket-based real-time collaboration at scale
-- Build production-grade monitoring, logging, and alerting systems
-
-**Portfolio Impact:**
-This project demonstrates the technical depth required for senior engineering roles at companies building real-time, distributed platforms like Roblox, Slack, and Notion.
-
----
-
-## Why We Built This
-
-### The Problem
-
-In today's digital world, our information is scattered across multiple platforms:
-- Notes in various apps
-- Important emails in Gmail
-- Documents in Google Drive
-- Events in Google Calendar
-
-**The result?** We waste hours searching for that one piece of information we know exists *somewhere*.
-
-### Our Solution
-
-ScribblyAi is an **AI-powered memory assistant** that:
-1. **Unifies** your data from multiple sources
-2. **Understands** natural language queries using Google Vertex AI
-3. **Searches** intelligently using Elasticsearch hybrid search (BM25 + vector embeddings)
-4. **Answers** conversationally with source citations
-
-### Hackathon Goals
-
-Built for the **Elastic Challenge Hackathon**, ScribblyAi showcases:
-- **Hybrid Search**: Combining keyword (BM25) and semantic (vector) search
-- **AI Integration**: Google Vertex AI for embeddings and conversational responses
-- **Multi-source Search**: Notes + Gmail + Google Drive in one place
-- **Real-time Indexing**: Automatic content synchronization
-- **Production-Ready**: Fully deployed and functional
-
----
-
-## Features
-
-### Intelligent Search
-- **Conversational AI Search**: Ask questions in natural language
-- **Hybrid Search Engine**: BM25 keyword + 768-dimension vector embeddings
-- **Multi-source Results**: Search across notes, Gmail, and Google Drive
-- **Source Citations**: Always know where information came from
-- **Context-Aware**: Maintains conversation history for follow-up questions
-
-### Smart Note Management
-- **Rich Text Editor**: Beautiful, responsive note editing
-- **AI-Powered Features**:
-  - Automatic summarization
-  - Task extraction with priorities
-  - Text rephrasing (formal/casual/concise)
-- **Folder Organization**: Hierarchical folders with custom colors & icons
-- **Quick Notes**: Sticky note-style rapid capture
-- **Calendar View**: Timeline-based note browsing
-
-### Secure Authentication
-- Google OAuth 2.0 integration
-- Email/password authentication
-- Secure token encryption (AES-256-GCM)
-- Session management with NextAuth.js
-
-### Google Services Integration
-- **Gmail**: Search email content, sync recent messages
-- **Google Drive**: Index documents and files
-- **Google Docs**: Full-text search across Docs
-- **Automatic Sync**: Hourly background synchronization
-
-### Modern UI/UX
-- Responsive design (mobile, tablet, desktop)
-- Beautiful gradient themes
-- Global search modal (Cmd+K / Ctrl+K)
-- Smooth animations and transitions
-- Loading states and error handling
 
 ---
 
 ## Tech Stack
 
 ### Frontend
-| Technology | Purpose |
+| Technology | Version |
 |------------|---------|
-| **Next.js 15** | React framework with App Router |
-| **React 19** | UI library |
-| **TypeScript** | Type safety |
-| **Tailwind CSS 4** | Styling |
-| **NextAuth.js** | Authentication |
-| **React Big Calendar** | Calendar view |
+| Next.js | 15 |
+| React | 19 |
+| TypeScript | 5 |
+| Tailwind CSS | 4 |
+| NextAuth.js | 4 |
+| Socket.io Client | 4 |
 
 ### Backend
+| Technology | Version |
+|------------|---------|
+| NestJS | 10 |
+| Prisma ORM | 5 |
+| PostgreSQL | 16 |
+| Elasticsearch | 8 |
+| KafkaJS | 2 |
+| Google Vertex AI | Gemini 1.5 |
+
+### Event Streaming & Analytics
 | Technology | Purpose |
 |------------|---------|
-| **NestJS** | Node.js framework |
-| **Prisma ORM** | Database toolkit |
-| **PostgreSQL** | Relational database |
-| **Elasticsearch** | Hybrid search engine |
-| **Google Vertex AI** | Gemini LLM + embeddings |
-| **googleapis** | Google APIs integration |
+| Apache Kafka | Event streaming & message broker |
+| Apache Spark | Real-time stream processing |
+| Zookeeper | Kafka cluster coordination |
 
 ### Infrastructure
 | Service | Purpose |
 |---------|---------|
-| **Vercel** | Frontend hosting |
-| **Railway** | Backend hosting |
-| **Supabase** | Managed PostgreSQL |
-| **Elastic Cloud** | Managed Elasticsearch |
-| **Google Cloud** | Vertex AI, OAuth |
-
----
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         USER INTERFACE                           │
-│  Next.js 15 + React 19 + Tailwind CSS (Vercel)                 │
-└────────────────────┬────────────────────────────────────────────┘
-                     │
-                     │ REST API
-                     │
-┌────────────────────▼────────────────────────────────────────────┐
-│                      BACKEND (NestJS)                            │
-│                     Railway / Cloud Run                          │
-│                                                                   │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
-│  │   Notes      │  │   Folders    │  │   Search     │          │
-│  │   Module     │  │   Module     │  │   Module     │          │
-│  └──────────────┘  └──────────────┘  └──────────────┘          │
-│                                                                   │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
-│  │   AI         │  │  Connectors  │  │   Auth       │          │
-│  │   Module     │  │   Module     │  │   Module     │          │
-│  └──────────────┘  └──────────────┘  └──────────────┘          │
-└───────┬──────────────┬──────────────┬─────────────────┬─────────┘
-        │              │              │                 │
-        │              │              │                 │
-┌───────▼─────┐ ┌──────▼──────┐ ┌────▼─────┐  ┌───────▼────────┐
-│  PostgreSQL │ │Elasticsearch│ │ Vertex AI│  │ Google APIs    │
-│  (Supabase) │ │(Elastic Cl.)│ │ Gemini   │  │ Gmail/Drive    │
-└─────────────┘ └─────────────┘ └──────────┘  └────────────────┘
-```
-
-### Data Flow
-
-1. **User Creates Note** → Saved to PostgreSQL → Generates embedding via Vertex AI → Indexed in Elasticsearch
-2. **User Searches** → Hybrid query (BM25 + vector) → Elasticsearch returns results → Gemini generates conversational response
-3. **Google Integration** → OAuth tokens stored (encrypted) → Periodic sync fetches Gmail/Drive → Content indexed in Elasticsearch
-
----
-
-## Getting Started
-
-### Prerequisites
-
-- **Node.js** 20+
-- **Git**
-- **PostgreSQL** (or use Supabase)
-- **Google Cloud Project** (for OAuth and Vertex AI)
-- **Elastic Cloud Account** (for Elasticsearch)
-
-### Installation
-
-#### 1. Clone the Repository
-
-```bash
-git clone https://github.com/Aadhavm10/ScribbleAi.git
-cd ScribbleAi
-```
-
-#### 2. Setup Backend
-
-```bash
-cd backend
-npm install
-```
-
-**Create `backend/.env`:**
-
-```env
-# Database
-DATABASE_URL="postgresql://USER:PASSWORD@HOST:6543/postgres?pgbouncer=true"
-DIRECT_URL="postgresql://USER:PASSWORD@HOST:5432/postgres?sslmode=require"
-
-# Server
-PORT=4000
-NODE_ENV=development
-SKIP_PRISMA=false
-
-# Google Cloud
-GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=your-client-secret
-GCP_PROJECT_ID=your-project-id
-VERTEX_AI_LOCATION=us-central1
-
-# Elasticsearch
-ELASTICSEARCH_URL=https://your-cluster.es.region.gcp.elastic.cloud:443
-ELASTICSEARCH_API_KEY=your-api-key
-
-# Token Encryption (generate with: openssl rand -base64 32)
-TOKEN_ENCRYPTION_KEY=your-base64-encoded-key
-```
-
-**Run Database Migration:**
-
-```bash
-npx prisma generate
-npx prisma db push
-```
-
-#### 3. Setup Frontend
-
-```bash
-cd ../frontend
-npm install
-```
-
-**Create `frontend/.env.local`:**
-
-```env
-# NextAuth
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=your-secret-here  # Generate with: openssl rand -base64 32
-
-# Google OAuth
-GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=your-client-secret
-
-# Database (for NextAuth)
-DATABASE_URL="postgresql://USER:PASSWORD@HOST:6543/postgres?pgbouncer=true"
-
-# API
-NEXT_PUBLIC_API_URL=http://localhost:4000
-```
-
-**Generate Prisma Client:**
-
-```bash
-npx prisma generate --schema=../backend/prisma/schema.prisma
-```
-
-#### 4. Configure Google Cloud
-
-1. **Create Project**: https://console.cloud.google.com/
-2. **Enable APIs**:
-   - Gmail API
-   - Google Drive API
-   - Google Docs API
-   - Vertex AI API
-3. **Configure OAuth Consent Screen**:
-   - User Type: External
-   - Add scopes:
-     - `openid`
-     - `email`
-     - `profile`
-     - `gmail.readonly`
-     - `drive.readonly`
-     - `documents.readonly`
-4. **Create OAuth 2.0 Client**:
-   - Type: Web application
-   - Authorized redirect URIs:
-     - `http://localhost:3000/api/auth/callback/google`
-     - `https://your-domain.vercel.app/api/auth/callback/google`
-5. **Add Test Users** (during development):
-   - OAuth Consent Screen → Test users → Add your email
-
-#### 5. Setup Elasticsearch
-
-1. **Create Cluster**: https://cloud.elastic.co/
-2. **Choose**: Elastic Cloud Serverless
-3. **Copy**: Cloud ID and API Key
-4. **Add to** `backend/.env`
-
-#### 6. Run the Application
-
-**Terminal 1 (Backend):**
-```bash
-cd backend
-npm run start:dev
-```
-
-**Terminal 2 (Frontend):**
-```bash
-cd frontend
-npm run dev
-```
-
-**Open Browser:**
-```
-http://localhost:3000
-```
+| Vercel | Frontend hosting |
+| Railway | Backend hosting |
+| Supabase | Managed PostgreSQL |
+| Elastic Cloud | Managed Elasticsearch |
+| Google Cloud | Vertex AI, OAuth |
+| Docker | Local development |
 
 ---
 
@@ -346,391 +64,281 @@ http://localhost:3000
 
 ```
 ScribblyAi/
-├── backend/                    # NestJS Backend
+├── backend/
 │   ├── src/
-│   │   ├── main.ts            # Entry point
-│   │   ├── app.module.ts      # Root module
-│   │   │
-│   │   ├── notes/             # Notes CRUD
-│   │   │   ├── notes.controller.ts
-│   │   │   ├── notes.service.ts
-│   │   │   └── notes.module.ts
-│   │   │
-│   │   ├── folders/           # Folder management
-│   │   │   ├── folders.controller.ts
-│   │   │   ├── folders.service.ts
-│   │   │   └── folders.module.ts
-│   │   │
-│   │   ├── ai/                # AI features (summarize, rephrase, tasks)
-│   │   │   ├── ai.controller.ts
-│   │   │   ├── ai.service.ts
-│   │   │   └── ai.module.ts
-│   │   │
-│   │   ├── search/            # Hybrid search
-│   │   │   ├── search.controller.ts
-│   │   │   ├── search.service.ts         # Hybrid search logic
-│   │   │   ├── indexing.service.ts       # Elasticsearch indexing
-│   │   │   ├── conversational.service.ts # AI conversations
-│   │   │   └── search.module.ts
-│   │   │
-│   │   ├── connectors/        # Google integrations
-│   │   │   ├── connectors.controller.ts
-│   │   │   ├── google.service.ts         # Gmail/Drive sync
-│   │   │   ├── sync-scheduler.service.ts # Hourly sync cron
-│   │   │   └── connectors.module.ts
-│   │   │
-│   │   ├── elasticsearch/     # Elasticsearch client
-│   │   │   ├── elasticsearch.service.ts
-│   │   │   └── elasticsearch.module.ts
-│   │   │
-│   │   ├── vertex-ai/         # Vertex AI client
-│   │   │   ├── vertex-ai.service.ts
-│   │   │   └── vertex-ai.module.ts
-│   │   │
-│   │   └── prisma/            # Prisma ORM
-│   │       ├── prisma.service.ts
-│   │       └── prisma.module.ts
-│   │
-│   ├── prisma/
-│   │   └── schema.prisma      # Database schema
-│   │
-│   ├── Dockerfile             # Docker config
-│   ├── package.json
-│   └── tsconfig.json
+│   │   ├── notes/              # Notes CRUD
+│   │   ├── folders/            # Folder management
+│   │   ├── search/             # Hybrid search (BM25 + Vector)
+│   │   ├── ai/                 # AI features
+│   │   ├── auth/               # Authentication
+│   │   ├── connectors/         # Google integrations
+│   │   ├── calendar/           # Calendar module
+│   │   ├── realtime/           # WebSocket gateway
+│   │   ├── kafka/
+│   │   │   ├── producers/      # Event producers
+│   │   │   ├── consumers/      # Event consumers
+│   │   │   └── interfaces/     # Event types
+│   │   ├── analytics/          # Real-time metrics
+│   │   ├── elasticsearch/      # Search client
+│   │   ├── vertex-ai/          # AI client
+│   │   └── prisma/             # Database ORM
+│   └── prisma/
+│       └── schema.prisma
 │
-├── frontend/                  # Next.js Frontend
+├── frontend/
 │   ├── app/
-│   │   ├── layout.tsx         # Root layout
-│   │   ├── page.tsx           # Redirect to dashboard
-│   │   │
-│   │   ├── (dashboard)/       # Authenticated routes
-│   │   │   ├── layout.tsx     # Dashboard layout with sidebar
+│   │   ├── (dashboard)/
 │   │   │   ├── dashboard/
-│   │   │   │   └── page.tsx   # Main dashboard
 │   │   │   ├── notes/
-│   │   │   │   └── page.tsx   # All notes grid
 │   │   │   ├── search/
-│   │   │   │   └── page.tsx   # AI search page
 │   │   │   ├── folders/
-│   │   │   │   └── page.tsx   # Folder management
 │   │   │   ├── connectors/
-│   │   │   │   └── page.tsx   # Google integrations
 │   │   │   ├── calendar/
-│   │   │   │   └── page.tsx   # Calendar view
 │   │   │   └── settings/
-│   │   │       └── page.tsx   # User settings
-│   │   │
-│   │   ├── auth/              # Authentication pages
-│   │   │   ├── signin/
-│   │   │   │   └── page.tsx
-│   │   │   ├── signup/
-│   │   │   │   └── page.tsx
-│   │   │   └── callback/
-│   │   │       └── page.tsx   # OAuth callback
-│   │   │
-│   │   ├── api/
-│   │   │   └── auth/
-│   │   │       └── [...nextauth]/
-│   │   │           └── route.ts # NextAuth config
-│   │   │
-│   │   ├── globals.css        # Global styles
-│   │   └── providers.tsx      # Context providers
-│   │
+│   │   ├── auth/
+│   │   └── api/
 │   ├── components/
-│   │   ├── layout/
-│   │   │   └── AppLayout.tsx  # Sidebar + navigation
-│   │   ├── NoteCard.tsx       # Note preview card
-│   │   ├── NoteEditor.tsx     # Note editing modal
-│   │   ├── MiniCalendar.tsx   # Dashboard calendar
-│   │   └── ConversationalSearch.tsx # AI search modal
-│   │
 │   ├── contexts/
-│   │   └── AuthContext.tsx    # Authentication context
-│   │
-│   ├── lib/
-│   │   └── api.ts             # API client (NotesAPI, SearchAPI, etc.)
-│   │
-│   ├── types/
-│   │   └── next-auth.d.ts     # NextAuth type extensions
-│   │
-│   ├── package.json
-│   ├── next.config.ts
-│   ├── tailwind.config.js
-│   └── tsconfig.json
+│   └── lib/
 │
-├── LICENSE                    # MIT License
-├── README.md                  # This file
-└── docker-compose.yml         # Local PostgreSQL (optional)
+├── spark/
+│   └── jobs/
+│       ├── note_analytics.py   # Note event processing
+│       └── sync_analytics.py   # Sync health metrics
+│
+└── docker-compose.yml
 ```
 
 ---
 
-## How It Works
+## Architecture
 
-### 1. **Note Creation & Indexing**
+### System Overview
 
-```typescript
-// User creates a note
-const note = await NotesAPI.createNote({
-  title: "Meeting Notes",
-  content: "Discussed Q1 roadmap...",
-  userId: user.id
-});
-
-// Backend flow:
-// 1. Save to PostgreSQL via Prisma
-// 2. Generate embedding via Vertex AI (768 dimensions)
-// 3. Index in Elasticsearch with both text and vector
-await elasticsearchService.index({
-  index: 'notes',
-  document: {
-    noteId: note.id,
-    userId: user.id,
-    title: note.title,
-    content: note.content,
-    content_embedding: embedding, // Vector from Vertex AI
-    updatedAt: note.updatedAt,
-  }
-});
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              FRONTEND                                        │
+│                    Next.js 15 + React 19 (Vercel)                           │
+└───────────────────────────────┬─────────────────────────────────────────────┘
+                                │ REST + WebSocket
+                                ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              BACKEND                                         │
+│                         NestJS (Railway)                                     │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐  │
+│  │  Notes  │ │ Folders │ │ Search  │ │   AI    │ │ Connect │ │Realtime │  │
+│  └────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘  │
+│       │           │           │           │           │           │        │
+│       └───────────┴───────────┴─────┬─────┴───────────┴───────────┘        │
+│                                     │                                       │
+│                              ┌──────▼──────┐                                │
+│                              │   Kafka     │                                │
+│                              │  Producers  │                                │
+│                              └──────┬──────┘                                │
+└─────────────────────────────────────┼───────────────────────────────────────┘
+                                      │
+        ┌─────────────────────────────┼─────────────────────────────┐
+        │                             │                             │
+        ▼                             ▼                             ▼
+┌───────────────┐           ┌─────────────────┐           ┌─────────────────┐
+│  PostgreSQL   │           │     Kafka       │           │  Elasticsearch  │
+│  (Supabase)   │           │   (Docker)      │           │ (Elastic Cloud) │
+└───────────────┘           └────────┬────────┘           └─────────────────┘
+                                     │
+                    ┌────────────────┼────────────────┐
+                    │                │                │
+                    ▼                ▼                ▼
+             ┌───────────┐    ┌───────────┐    ┌───────────┐
+             │ Indexing  │    │  Audit    │    │ Analytics │
+             │ Consumer  │    │ Consumer  │    │ Consumer  │
+             └─────┬─────┘    └─────┬─────┘    └─────┬─────┘
+                   │                │                │
+                   │                │                ▼
+                   │                │         ┌───────────┐
+                   │                │         │   Spark   │
+                   │                │         │ Streaming │
+                   │                │         └─────┬─────┘
+                   │                │               │
+                   ▼                ▼               ▼
+             Elasticsearch    Audit Trail    Analytics API
 ```
 
-### 2. **Hybrid Search**
+### Kafka Event Flow
 
-```typescript
-// User searches: "What did we discuss about the roadmap?"
-const results = await SearchAPI.hybridSearch(query, userId);
-
-// Backend flow:
-// 1. Generate query embedding
-const queryEmbedding = await vertexAi.generateEmbedding(query);
-
-// 2. Keyword search (BM25)
-const keywordResults = await elasticsearch.search({
-  query: {
-    multi_match: {
-      query,
-      fields: ['title^3', 'content'],
-      fuzziness: 'AUTO'
-    }
-  }
-});
-
-// 3. Vector search (cosine similarity)
-const vectorResults = await elasticsearch.search({
-  query: {
-    script_score: {
-      query: { match_all: {} },
-      script: {
-        source: "cosineSimilarity(params.queryVector, 'content_embedding') + 1.0",
-        params: { queryVector: queryEmbedding }
-      }
-    }
-  }
-});
-
-// 4. Merge with Reciprocal Rank Fusion (RRF)
-const merged = reciprocalRankFusion(keywordResults, vectorResults);
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│                           KAFKA TOPICS                                    │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  scribbly.notes.events ──────► IndexingConsumer ──────► Elasticsearch   │
+│         │                                                                │
+│         └────────────────────► AuditLogConsumer ──────► Audit Trail     │
+│                                                                          │
+│  scribbly.sync.jobs ─────────► SyncWorkerConsumer ────► Google APIs     │
+│         │                                                                │
+│         └────────────────────► scribbly.sync.results                    │
+│                                                                          │
+│  scribbly.analytics.events ──► AnalyticsConsumer ─────► Aggregates      │
+│                                       │                                  │
+│                                       ▼                                  │
+│                                 Spark Streaming                          │
+│                                       │                                  │
+│                                       ▼                                  │
+│                          scribbly.analytics.aggregates                   │
+│                                                                          │
+│  *.dlq ──────────────────────► DlqConsumer ───────────► Error Handling  │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 3. **Conversational AI**
+### Spark Analytics Pipeline
 
-```typescript
-// User asks: "Summarize the key points"
-const response = await SearchAPI.conversationalSearch(query, userId);
-
-// Backend flow:
-// 1. Perform hybrid search to find relevant notes
-// 2. Build context from top results
-// 3. Call Vertex AI Gemini with context
-const aiResponse = await vertexAi.generateResponse({
-  prompt: `Based on these notes: ${context}\n\nUser question: ${query}`,
-  temperature: 0.7
-});
-
-// 4. Return response with source citations
-return {
-  response: aiResponse.text,
-  sources: topResults,
-  conversationId: conversation.id
-};
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│  Kafka Topics   │     │  Spark Streaming │     │   Output        │
+├─────────────────┤     ├─────────────────┤     ├─────────────────┤
+│                 │     │                 │     │                 │
+│ notes.events ───┼────►│ note_analytics  │────►│ User Activity   │
+│                 │     │    .py          │     │ Metrics         │
+│                 │     │                 │     │                 │
+│ sync.results ───┼────►│ sync_analytics  │────►│ Sync Health     │
+│                 │     │    .py          │     │ Metrics         │
+│                 │     │                 │     │                 │
+└─────────────────┘     │  5-min windows  │     │ analytics.      │
+                        │  Aggregations   │     │ aggregates      │
+                        └─────────────────┘     └─────────────────┘
 ```
 
-### 4. **Google Integration**
+### Search Architecture
 
-```typescript
-// User connects Google account
-// 1. OAuth flow stores encrypted tokens in SourceAccount table
-await googleService.upsertSourceAccount({
-  userId: user.id,
-  accessToken: encrypt(tokens.access_token),
-  refreshToken: encrypt(tokens.refresh_token),
-  expiresAt: tokens.expiry_date
-});
-
-// 2. Periodic sync (hourly cron job)
-@Cron(CronExpression.EVERY_HOUR)
-async syncAllUsers() {
-  // Gmail sync
-  const emails = await gmail.users.messages.list({ userId: 'me' });
-  for (const email of emails) {
-    const content = await extractEmailContent(email);
-    const embedding = await vertexAi.generateEmbedding(content);
-    await elasticsearch.index({
-      provider: 'gmail',
-      itemType: 'email',
-      content,
-      embedding
-    });
-  }
-
-  // Drive sync (similar process)
-}
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         HYBRID SEARCH                                    │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  User Query: "What did we discuss about the roadmap?"                   │
+│                           │                                             │
+│                           ▼                                             │
+│                  ┌─────────────────┐                                    │
+│                  │   Vertex AI     │                                    │
+│                  │  Embeddings     │                                    │
+│                  └────────┬────────┘                                    │
+│                           │                                             │
+│           ┌───────────────┴───────────────┐                             │
+│           │                               │                             │
+│           ▼                               ▼                             │
+│   ┌───────────────┐               ┌───────────────┐                     │
+│   │  BM25 Search  │               │ Vector Search │                     │
+│   │  (Keywords)   │               │  (Semantic)   │                     │
+│   └───────┬───────┘               └───────┬───────┘                     │
+│           │                               │                             │
+│           └───────────────┬───────────────┘                             │
+│                           │                                             │
+│                           ▼                                             │
+│                  ┌─────────────────┐                                    │
+│                  │ Reciprocal Rank │                                    │
+│                  │     Fusion      │                                    │
+│                  └────────┬────────┘                                    │
+│                           │                                             │
+│                           ▼                                             │
+│                  ┌─────────────────┐                                    │
+│                  │   Gemini LLM    │                                    │
+│                  │   Response      │                                    │
+│                  └─────────────────┘                                    │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Future Integrations
+## How to Run
 
-### Short-term (1-2 months)
+### Prerequisites
 
-#### Google Calendar Integration
-- Sync calendar events
-- Create notes from meetings
-- Show events in timeline view
-- Smart reminders
+- Node.js 20+
+- Docker Desktop
+- Google Cloud Project (OAuth + Vertex AI)
+- Elastic Cloud Account
 
-#### Dark Mode
-- System preference detection
-- Manual toggle
-- Persistent user preference
+### 1. Clone & Install
 
-#### Export/Import
-- Export notes as JSON/Markdown
-- Import from other note apps
-- Backup automation
-
-### Medium-term (3-6 months)
-
-#### Mobile Apps
-- React Native iOS/Android apps
-- Offline mode with sync
-- Push notifications
-- Camera OCR for note capture
-
-#### Browser Extension
-- Chrome/Firefox/Safari extensions
-- Clip web pages to notes
-- Quick capture popup
-- Context menu integration
-
-#### Smart Tags & Organization
-- AI-powered auto-tagging
-- Tag-based filtering
-- Related notes suggestions
-- Tag clouds and analytics
-
-### Long-term (6+ months)
-
-#### Real-time Collaboration
-- Live multi-user editing (CRDT)
-- Cursor positions and presence
-- Comment threads
-- Mention users (@username)
-- Granular permissions
-
-#### Voice & Vision
-- Voice-to-text notes
-- Image OCR (extract text from photos)
-- Diagram recognition
-- Audio note recordings
-
-#### Advanced AI
-- Sentiment analysis
-- Language translation (50+ languages)
-- Smart suggestions and auto-complete
-- Meeting transcription & summarization
-- Knowledge graph visualization
-
-#### More Integrations
-- Slack messages
-- Discord channels
-- Notion import
-- Obsidian sync
-- Evernote migration
-- Microsoft 365 (Outlook, OneDrive)
-- Dropbox
-- GitHub issues/PRs
-- Trello boards
-
----
-
-## Contributing
-
-We welcome contributions! Here's how to get started:
-
-### Development Workflow
-
-1. **Fork the repository**
-2. **Create a feature branch**
 ```bash
-   git checkout -b feature/amazing-feature
+git clone https://github.com/Aadhavm10/ScribbleAi.git
+cd ScribbleAi
+
+# Backend
+cd backend && npm install
+
+# Frontend
+cd ../frontend && npm install
 ```
-3. **Make your changes**
-4. **Test thoroughly**
+
+### 2. Environment Setup
+
+**backend/.env**
+```env
+DATABASE_URL="postgresql://..."
+DIRECT_URL="postgresql://..."
+GOOGLE_CLIENT_ID="..."
+GOOGLE_CLIENT_SECRET="..."
+GCP_PROJECT_ID="..."
+VERTEX_AI_LOCATION="us-central1"
+ELASTICSEARCH_URL="https://..."
+ELASTICSEARCH_API_KEY="..."
+TOKEN_ENCRYPTION_KEY="..."
+KAFKA_BROKERS="localhost:9092"
+KAFKA_ENABLED="true"
+```
+
+**frontend/.env.local**
+```env
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET="..."
+GOOGLE_CLIENT_ID="..."
+GOOGLE_CLIENT_SECRET="..."
+DATABASE_URL="postgresql://..."
+NEXT_PUBLIC_API_URL=http://localhost:3002
+```
+
+### 3. Start Infrastructure
+
 ```bash
-   # Backend tests
-   cd backend && npm test
-   
-   # Frontend tests
-   cd frontend && npm test
-   ```
-5. **Commit with conventional commits**
+# Start Kafka, Spark, Zookeeper, PostgreSQL
+docker compose up -d
+```
+
+### 4. Database Migration
+
 ```bash
-   git commit -m "feat: add amazing feature"
-   ```
-6. **Push to your fork**
+cd backend
+npx prisma generate
+npx prisma db push
+```
+
+### 5. Run Application
+
 ```bash
-   git push origin feature/amazing-feature
-   ```
-7. **Open a Pull Request**
+# Terminal 1 - Backend
+cd backend && npm run start:dev
 
-### Commit Convention
+# Terminal 2 - Frontend
+cd frontend && npm run dev
+```
 
-- `feat:` New feature
-- `fix:` Bug fix
-- `docs:` Documentation changes
-- `style:` Code style changes (formatting)
-- `refactor:` Code refactoring
-- `test:` Test changes
-- `chore:` Build/tooling changes
+### 6. Access Services
 
----
-
-## License
-
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
-
----
-
-## Acknowledgments
-
-- **Elastic** for the amazing search platform and hackathon opportunity
-- **Google Cloud** for Vertex AI and generous free tier
-- **Supabase** for managed PostgreSQL hosting
-- **Vercel** for seamless Next.js deployment
-- **Railway** for hassle-free backend hosting
-
----
-
-## Contact & Support
-
-- **GitHub Issues**: [Report a bug or request a feature](https://github.com/Aadhavm10/ScribbleAi/issues)
-- **Live Demo**: [scribble-ai-ten.vercel.app](https://scribble-ai-ten.vercel.app)
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:3000 |
+| Backend | http://localhost:3002 |
+| Kafka UI | http://localhost:8081 |
+| Spark UI | http://localhost:8080 |
+| PgAdmin | http://localhost:5050 |
 
 ---
 
 <div align="center">
 
-**Built for the Elastic Challenge Hackathon**
+**MIT License**
 
 </div>

@@ -3,6 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import * as cron from 'node-cron';
 import { GoogleService } from './google.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { SyncEventProducer } from '../kafka/producers/sync-event.producer';
+import { KafkaService } from '../kafka/kafka.service';
 
 @Injectable()
 export class SyncSchedulerService implements OnModuleInit {
@@ -13,6 +15,8 @@ export class SyncSchedulerService implements OnModuleInit {
     private configService: ConfigService,
     private googleService: GoogleService,
     private prisma: PrismaService,
+    private syncEventProducer: SyncEventProducer,
+    private kafkaService: KafkaService,
   ) {}
 
   onModuleInit() {
@@ -49,27 +53,57 @@ export class SyncSchedulerService implements OnModuleInit {
 
       const uniqueUserIds = [...new Set(sourceAccounts.map(acc => acc.userId))];
 
-      this.logger.log(`Syncing ${uniqueUserIds.length} users...`);
+      this.logger.log(`Distributing sync jobs for ${uniqueUserIds.length} users...`);
 
+      // Use Kafka for distributed sync if available
+      if (this.kafkaService.isAvailable()) {
+        const jobsQueued = await this.syncEventProducer.publishBulkSyncJobs(
+          uniqueUserIds,
+          ['gmail', 'drive', 'docs'],
+        );
+        this.logger.log(`Queued ${jobsQueued} sync jobs for parallel processing via Kafka`);
+        return;
+      }
+
+      // Fallback to sequential processing if Kafka is unavailable
+      this.logger.warn('Kafka unavailable, falling back to sequential sync');
       for (const userId of uniqueUserIds) {
         try {
           const stats = await this.googleService.sync(userId, ['gmail', 'drive', 'docs']);
           this.logger.log(`Synced user ${userId}: Gmail=${stats.gmail}, Drive=${stats.drive}, Docs=${stats.docs}`);
         } catch (error) {
-          this.logger.error(`Failed to sync user ${userId}: ${error.message}`);
+          this.logger.error(`Failed to sync user ${userId}: ${error instanceof Error ? error.message : error}`);
         }
       }
 
-      this.logger.log('Scheduled sync completed');
+      this.logger.log('Scheduled sync completed (sequential fallback)');
     } catch (error) {
-      this.logger.error(`Scheduled sync failed: ${error.message}`);
+      this.logger.error(`Scheduled sync failed: ${error instanceof Error ? error.message : error}`);
     }
   }
 
-  // Manual trigger for testing
-  async triggerManualSync() {
+  // Manual trigger for testing - syncs a single user
+  async triggerManualSync(userId?: string) {
     this.logger.log('Manual sync triggered');
+
+    if (userId) {
+      // Sync single user via Kafka if available
+      if (this.kafkaService.isAvailable()) {
+        const jobsQueued = await this.syncEventProducer.publishBulkSyncJobs(
+          [userId],
+          ['gmail', 'drive', 'docs'],
+        );
+        this.logger.log(`Queued ${jobsQueued} sync jobs for user ${userId}`);
+        return { queued: jobsQueued };
+      }
+
+      // Fallback to direct sync
+      const stats = await this.googleService.sync(userId, ['gmail', 'drive', 'docs']);
+      return stats;
+    }
+
     await this.syncAllUsers();
+    return { message: 'Sync jobs distributed' };
   }
 }
 

@@ -14,6 +14,8 @@ import { ConnectorsModule } from './connectors/connectors.module';
 import { AuthModule } from './auth/auth.module';
 import { CalendarModule } from './calendar/calendar.module';
 import { RealtimeModule } from './realtime/realtime.module';
+import { KafkaModule } from './kafka/kafka.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -29,6 +31,8 @@ import { RealtimeModule } from './realtime/realtime.module';
     ConnectorsModule,
     CalendarModule,
     RealtimeModule,
+    KafkaModule,
+    AnalyticsModule,
   ],
   controllers: [AppController, DevController],
   providers: [AppService],

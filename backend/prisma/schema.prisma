@@ -290,3 +290,35 @@ model AnalyticsMetric {
   @@index([metricName, windowStart])
   @@index([createdAt])
 }
+
+// Kafka Event Sourcing models
+model AuditLog {
+  id           String   @id @default(cuid())
+  eventId      String   @unique
+  eventType    String
+  timestamp    DateTime
+  actorUserId  String
+  resourceType String   // 'note', 'folder', 'tag', 'calendar', 'user', 'sync'
+  resourceId   String
+  action       String   // 'create', 'read', 'update', 'delete'
+  changes      Json?    // {before: {...}, after: {...}}
+  createdAt    DateTime @default(now())
+
+  @@index([actorUserId, createdAt])
+  @@index([resourceType, resourceId])
+  @@index([eventType, createdAt])
+}
+
+model FailedJob {
+  id         String    @id
+  topic      String
+  payload    Json
+  error      String
+  failedAt   DateTime
+  retryCount Int       @default(0)
+  resolvedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([topic, createdAt])
+  @@index([resolvedAt])
+}
