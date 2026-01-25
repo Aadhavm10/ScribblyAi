@@ -52,7 +52,7 @@
 | Service | Purpose |
 |---------|---------|
 | Vercel | Frontend hosting |
-| Railway | Backend hosting |
+| Render | Backend hosting |
 | Supabase | Managed PostgreSQL |
 | Elastic Cloud | Managed Elasticsearch |
 | Google Cloud | Vertex AI, OAuth |
@@ -124,7 +124,7 @@ ScribblyAi/
                                 ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                              BACKEND                                         │
-│                         NestJS (Railway)                                     │
+│                         NestJS (Render)                                      │
 │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐  │
 │  │  Notes  │ │ Folders │ │ Search  │ │   AI    │ │ Connect │ │Realtime │  │
 │  └────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘  │
@@ -334,6 +334,19 @@ cd frontend && npm run dev
 | Kafka UI | http://localhost:8081 |
 | Spark UI | http://localhost:8080 |
 | PgAdmin | http://localhost:5050 |
+
+---
+
+## Keep-Alive Setup (Free Tier)
+
+Render and Supabase free tiers spin down after inactivity. To keep services warm:
+
+1. The backend has a `/health` endpoint that pings the database
+2. Set up a free cron job at [cron-job.org](https://cron-job.org):
+   - **URL:** `https://your-render-url.onrender.com/health`
+   - **Schedule:** Every 5 minutes
+
+This keeps both Render (prevents cold starts) and Supabase (prevents database pausing) active.
 
 ---
 
