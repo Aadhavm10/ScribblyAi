@@ -16,10 +16,12 @@ import { CalendarModule } from './calendar/calendar.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { KafkaModule } from './kafka/kafka.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { MetricsModule } from './metrics/metrics.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    MetricsModule,
     PrismaModule,
     ElasticsearchModule,
     VertexAiModule,

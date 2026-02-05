@@ -12,6 +12,9 @@
 [![Spark](https://img.shields.io/badge/Apache%20Spark-E25A1C?style=for-the-badge&logo=apachespark&logoColor=white)](https://spark.apache.org/)
 [![Elasticsearch](https://img.shields.io/badge/Elasticsearch-005571?style=for-the-badge&logo=elasticsearch)](https://elastic.co/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://postgresql.org/)
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)](https://kubernetes.io/)
+[![Jest](https://img.shields.io/badge/Jest-C21325?style=for-the-badge&logo=jest&logoColor=white)](https://jestjs.io/)
+[![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=prometheus&logoColor=white)](https://prometheus.io/)
 
 [Live Demo](https://scribble-ai-ten.vercel.app) · [Report Bug](https://github.com/Aadhavm10/ScribbleAi/issues)
 
@@ -58,6 +61,21 @@
 | Google Cloud | Vertex AI, OAuth |
 | Docker | Local development |
 
+### Testing & CI/CD
+| Technology | Purpose |
+|------------|---------|
+| Jest | Unit & integration testing |
+| React Testing Library | Frontend component tests |
+| GitHub Actions | CI/CD pipeline |
+| Codecov | Coverage reporting |
+
+### Monitoring
+| Technology | Purpose |
+|------------|---------|
+| Prometheus | Metrics collection |
+| Grafana | Visualization & dashboards |
+| prom-client | Node.js metrics |
+
 ---
 
 ## Project Structure
@@ -81,7 +99,9 @@ ScribblyAi/
 │   │   ├── analytics/          # Real-time metrics
 │   │   ├── elasticsearch/      # Search client
 │   │   ├── vertex-ai/          # AI client
-│   │   └── prisma/             # Database ORM
+│   │   ├── metrics/            # Prometheus metrics
+│   │   ├── prisma/             # Database ORM
+│   │   └── test/               # Test utilities & mocks
 │   └── prisma/
 │       └── schema.prisma
 │
@@ -105,6 +125,16 @@ ScribblyAi/
 │   └── jobs/
 │       ├── note_analytics.py   # Note event processing
 │       └── sync_analytics.py   # Sync health metrics
+│
+├── k8s/                        # Kubernetes manifests
+│   ├── backend/                # Backend deployment & HPA
+│   ├── postgres/               # PostgreSQL StatefulSet
+│   ├── kafka/                  # Kafka & Zookeeper
+│   └── monitoring/             # Prometheus & Grafana
+│
+├── .github/
+│   └── workflows/
+│       └── ci.yml              # CI/CD pipeline
 │
 └── docker-compose.yml
 ```
@@ -334,6 +364,208 @@ cd frontend && npm run dev
 | Kafka UI | http://localhost:8081 |
 | Spark UI | http://localhost:8080 |
 | PgAdmin | http://localhost:5050 |
+
+---
+
+## Testing
+
+### Run Tests
+
+```bash
+# Backend tests
+cd backend && npm run test
+
+# Backend with coverage
+cd backend && npm run test:cov
+
+# Frontend tests
+cd frontend && npm run test
+
+# E2E tests
+cd backend && npm run test:e2e
+```
+
+### Test Structure
+
+```
+backend/src/
+├── notes/
+│   └── notes.service.spec.ts      # Notes CRUD tests
+├── auth/
+│   └── auth.service.spec.ts       # Auth & JWT tests
+├── folders/
+│   └── folders.service.spec.ts    # Folder operations tests
+├── app.controller.spec.ts         # Health endpoint tests
+└── test/
+    ├── mock-factory.ts            # Centralized mocks
+    └── fixtures.ts                # Test data
+
+frontend/
+├── lib/__tests__/
+│   └── api.test.ts                # API layer tests
+├── jest.config.js
+└── jest.setup.ts
+```
+
+### CI/CD Pipeline
+
+GitHub Actions runs on every push:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     CI PIPELINE                                  │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────┐   ┌─────────────┐   ┌─────────────┐           │
+│  │  Backend    │   │  Frontend   │   │    Lint     │           │
+│  │   Tests     │   │   Tests     │   │             │           │
+│  └──────┬──────┘   └──────┬──────┘   └──────┬──────┘           │
+│         │                 │                 │                   │
+│         └────────────┬────┴─────────────────┘                   │
+│                      │                                          │
+│                      ▼                                          │
+│              ┌─────────────┐                                    │
+│              │    Build    │                                    │
+│              │ Verification│                                    │
+│              └─────────────┘                                    │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Kubernetes Deployment
+
+### Prerequisites
+
+- Minikube or Docker Desktop with Kubernetes
+- kubectl configured
+
+### Deploy to Local Cluster
+
+```bash
+# Start Minikube
+minikube start --memory=4096 --cpus=2
+minikube addons enable ingress
+minikube addons enable metrics-server
+
+# Deploy all services
+./k8s/deploy.sh
+
+# Check status
+kubectl get pods -n scribbly
+kubectl get hpa -n scribbly
+```
+
+### K8s Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    KUBERNETES CLUSTER                            │
+│                     namespace: scribbly                          │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                      INGRESS                             │   │
+│  │            api.scribbly.local → backend-service          │   │
+│  └────────────────────────────┬────────────────────────────┘   │
+│                               │                                 │
+│                               ▼                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │              BACKEND DEPLOYMENT (2-5 replicas)           │   │
+│  │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐    │   │
+│  │  │  Pod 1  │  │  Pod 2  │  │  Pod 3  │  │  ...    │    │   │
+│  │  └─────────┘  └─────────┘  └─────────┘  └─────────┘    │   │
+│  │                    HPA: Scale on CPU > 70%               │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                               │                                 │
+│         ┌─────────────────────┼─────────────────────┐          │
+│         │                     │                     │          │
+│         ▼                     ▼                     ▼          │
+│  ┌─────────────┐      ┌─────────────┐      ┌─────────────┐    │
+│  │  PostgreSQL │      │    Kafka    │      │  Prometheus │    │
+│  │ StatefulSet │      │ Deployment  │      │  + Grafana  │    │
+│  └─────────────┘      └─────────────┘      └─────────────┘    │
+│                               │                                 │
+│                               ▼                                 │
+│                        ┌─────────────┐                         │
+│                        │  Zookeeper  │                         │
+│                        └─────────────┘                         │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### K8s Services
+
+| Service | Type | Port |
+|---------|------|------|
+| backend-service | ClusterIP | 3002 |
+| postgres-service | ClusterIP | 5432 |
+| kafka-service | ClusterIP | 9092 |
+| prometheus-service | NodePort | 9090 |
+| grafana-service | NodePort | 3000 |
+
+---
+
+## Monitoring
+
+### Backend Metrics
+
+The backend exposes Prometheus metrics at `/metrics`:
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `http_requests_total` | Counter | Total HTTP requests by method/path/status |
+| `http_request_duration_seconds` | Histogram | Request latency (P50, P95, P99) |
+| `http_request_errors_total` | Counter | Total error responses |
+| `notes_created_total` | Counter | Business metric: notes created |
+| `search_queries_total` | Counter | Business metric: search queries |
+| `websocket_connections_active` | Gauge | Active WebSocket connections |
+
+### Access Dashboards
+
+```bash
+# Prometheus UI
+minikube service prometheus-service -n scribbly
+
+# Grafana (admin/admin)
+minikube service grafana-service -n scribbly
+
+# Or with kubectl port-forward
+kubectl port-forward svc/grafana-service 3001:3000 -n scribbly
+```
+
+### Grafana Dashboard
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                SCRIBBLYAI BACKEND METRICS                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
+│  │  QPS: 150    │  │ Error: 0.1%  │  │ P99: 120ms   │          │
+│  └──────────────┘  └──────────────┘  └──────────────┘          │
+│                                                                 │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │                Request Latency Distribution               │  │
+│  │  ████████████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░  │  │
+│  │  P50: 25ms    P95: 80ms    P99: 120ms                    │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │                 Requests by Status Code                   │  │
+│  │  200 ████████████████████████████████████ 95%            │  │
+│  │  201 ██████ 3%                                           │  │
+│  │  500 █ 0.1%                                              │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│  ┌────────────┐  ┌────────────┐  ┌────────────┐               │
+│  │ Notes(24h) │  │ Search/min │  │ WebSockets │               │
+│  │    1,234   │  │     45     │  │     12     │               │
+│  └────────────┘  └────────────┘  └────────────┘               │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ---
 

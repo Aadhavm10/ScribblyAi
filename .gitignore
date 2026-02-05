@@ -64,6 +64,9 @@ firebase-adminsdk*.json
 # Docker
 docker-compose.override.yml
 
+# Kubernetes secrets (use secrets.yaml.example as template)
+k8s/secrets.yaml
+
 # Backup files
 *.bak
 *.backup
