@@ -116,11 +116,27 @@ export const createMockVertexAiService = () => ({
   generateResponse: jest.fn().mockResolvedValue('Mock AI response'),
 });
 
-// Mock ElasticsearchService
-export const createMockElasticsearchService = () => ({
-  index: jest.fn().mockResolvedValue({ result: 'created' }),
-  search: jest.fn().mockResolvedValue({ hits: { hits: [] } }),
-  delete: jest.fn().mockResolvedValue({ result: 'deleted' }),
+// Mock ElasticsearchService (client methods are reachable as mock.client.*)
+export const createMockElasticsearchService = () => {
+  const client = {
+    index: jest.fn().mockResolvedValue({ result: 'created' }),
+    search: jest.fn().mockResolvedValue({ hits: { hits: [] } }),
+    delete: jest.fn().mockResolvedValue({ result: 'deleted' }),
+  };
+  return {
+    client,
+    isEnabled: jest.fn().mockReturnValue(true),
+    getClient: jest.fn().mockReturnValue(client),
+  };
+};
+
+// Mock MetricsService
+export const createMockMetricsService = () => ({
+  notesCreated: { inc: jest.fn() },
+  notesUpdated: { inc: jest.fn() },
+  notesDeleted: { inc: jest.fn() },
+  searchQueries: { inc: jest.fn() },
+  activeConnections: { inc: jest.fn(), dec: jest.fn() },
 });
 
 // Mock Google Calendar Service

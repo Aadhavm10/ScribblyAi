@@ -32,7 +32,7 @@ export default function SearchPage() {
 
     setSearching(true);
     try {
-      const searchResults = await SearchAPI.hybridSearch(query, user.id, selectedProviders);
+      const searchResults = await SearchAPI.hybridSearch(query, selectedProviders);
       setResults(searchResults);
     } catch (error) {
       console.error('Search error:', error);

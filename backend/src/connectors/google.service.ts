@@ -149,11 +149,11 @@ export class GoogleService {
   }
 
   private async indexNormalizedItem(userId: string, doc: { id: string; title?: string; content?: string; provider: string; itemType: string; mimeType?: string; webViewUrl?: string; modifiedAt?: Date; }) {
-    const text = `${doc.title ?? ''}\n\n${doc.content ?? ''}`.trim();
-    let embedding: number[] = [];
-    if (text) {
-      embedding = await this.vertex.generateEmbedding(text);
-    }
+    if (!this.es.isEnabled()) return;
+    const embedding = await this.vertex.generateEmbedding(
+      `${doc.title ?? ''}\n\n${doc.content ?? ''}`,
+      'RETRIEVAL_DOCUMENT',
+    );
     const client = this.es.getClient();
     await client.index({
       index: 'notes',
@@ -167,7 +167,7 @@ export class GoogleService {
         itemType: doc.itemType,
         mimeType: doc.mimeType ?? null,
         webViewUrl: doc.webViewUrl ?? null,
-        content_embedding: embedding,
+        ...(embedding && { content_embedding: embedding }),
         updatedAt: (doc.modifiedAt ?? new Date()).toISOString(),
         createdAt: new Date().toISOString(),
       },

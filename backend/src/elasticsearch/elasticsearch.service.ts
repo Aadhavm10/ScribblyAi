@@ -2,15 +2,23 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Client } from '@elastic/elasticsearch';
 
+export const NOTES_INDEX = 'notes';
+export const EMBEDDING_DIMENSIONS = 768;
+
 @Injectable()
 export class ElasticsearchService implements OnModuleInit {
   private readonly logger = new Logger(ElasticsearchService.name);
-  private client: Client;
-  private readonly indexName = 'notes';
+  private client?: Client;
+  private readonly indexName = NOTES_INDEX;
 
   constructor(private configService: ConfigService) {
     const elasticsearchUrl = this.configService.get('ELASTICSEARCH_URL');
     const apiKey = this.configService.get('ELASTICSEARCH_API_KEY');
+
+    if (!elasticsearchUrl) {
+      this.logger.warn('ELASTICSEARCH_URL not set. Search will fall back to PostgreSQL.');
+      return;
+    }
 
     this.client = new Client({
       node: elasticsearchUrl,
@@ -24,6 +32,8 @@ export class ElasticsearchService implements OnModuleInit {
   }
 
   async onModuleInit() {
+    if (!this.client) return;
+
     try {
       await this.createIndex();
     } catch (error) {
@@ -33,11 +43,12 @@ export class ElasticsearchService implements OnModuleInit {
 
   async createIndex() {
     try {
-      const exists = await this.client.indices.exists({ index: this.indexName });
-      
+      const client = this.getClient();
+      const exists = await client.indices.exists({ index: this.indexName });
+
       if (!exists) {
         // Serverless-compatible index creation (no shards/replicas settings)
-        await this.client.indices.create({
+        await client.indices.create({
           index: this.indexName,
           body: {
             mappings: {
@@ -53,10 +64,15 @@ export class ElasticsearchService implements OnModuleInit {
                 tags: { type: 'keyword' },
                 content_embedding: {
                   type: 'dense_vector',
-                  dims: 768,
+                  dims: EMBEDDING_DIMENSIONS,
                   index: true,
                   similarity: 'cosine',
                 },
+                // 'notes' for ScribblyAi notes, 'gmail' / 'drive' for synced Google items
+                provider: { type: 'keyword' },
+                itemType: { type: 'keyword' },
+                mimeType: { type: 'keyword' },
+                webViewUrl: { type: 'keyword', index: false },
                 createdAt: { type: 'date' },
                 updatedAt: { type: 'date' },
                 viewCount: { type: 'integer' },
@@ -76,8 +92,14 @@ export class ElasticsearchService implements OnModuleInit {
     }
   }
 
+  isEnabled(): boolean {
+    return !!this.client;
+  }
+
   getClient(): Client {
+    if (!this.client) {
+      throw new Error('Elasticsearch is not configured (ELASTICSEARCH_URL missing)');
+    }
     return this.client;
   }
 }
-

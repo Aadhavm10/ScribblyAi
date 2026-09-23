@@ -10,6 +10,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { MetricsService } from '../metrics/metrics.service';
 
 interface JoinNotePayload {
   noteId: string;
@@ -41,14 +42,19 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   private readonly logger = new Logger(RealtimeGateway.name);
   private activeUsers = new Map<string, Set<string>>(); // noteId -> Set of socketIds
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private metrics: MetricsService,
+  ) {}
 
   async handleConnection(client: Socket) {
     this.logger.log(`Client connected: ${client.id}`);
+    this.metrics.activeConnections.inc();
   }
 
   async handleDisconnect(client: Socket) {
     this.logger.log(`Client disconnected: ${client.id}`);
+    this.metrics.activeConnections.dec();
     
     // Clean up active sessions
     try {

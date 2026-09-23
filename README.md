@@ -7,7 +7,7 @@
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
-[![NestJS](https://img.shields.io/badge/NestJS-10-E0234E?style=for-the-badge&logo=nestjs)](https://nestjs.com/)
+[![NestJS](https://img.shields.io/badge/NestJS-11-E0234E?style=for-the-badge&logo=nestjs)](https://nestjs.com/)
 [![Kafka](https://img.shields.io/badge/Apache%20Kafka-231F20?style=for-the-badge&logo=apachekafka)](https://kafka.apache.org/)
 [![Spark](https://img.shields.io/badge/Apache%20Spark-E25A1C?style=for-the-badge&logo=apachespark&logoColor=white)](https://spark.apache.org/)
 [![Elasticsearch](https://img.shields.io/badge/Elasticsearch-005571?style=for-the-badge&logo=elasticsearch)](https://elastic.co/)
@@ -16,9 +16,20 @@
 [![Jest](https://img.shields.io/badge/Jest-C21325?style=for-the-badge&logo=jest&logoColor=white)](https://jestjs.io/)
 [![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=prometheus&logoColor=white)](https://prometheus.io/)
 
-[Live Demo](https://scribble-ai-ten.vercel.app) · [Report Bug](https://github.com/Aadhavm10/ScribbleAi/issues)
+[Live Demo](https://scribble-ai-ten.vercel.app) · [Report Bug](https://github.com/Aadhavm10/ScribblyAi/issues)
 
 </div>
+
+ScribblyAi is an AI memory assistant for your notes. Write and organize notes in folders, connect your Google account (Gmail, Drive, Docs, and Calendar), and ask questions in plain English: Gemini answers from your own notes. Built-in AI tools summarize notes, rephrase text (formal, casual, or concise), and extract tasks.
+
+## Highlights
+
+- **Event-driven backend:** NestJS services publish to Kafka, and dedicated consumers handle search indexing, audit logging, Google sync, and analytics. Failed messages go to dead-letter topics instead of blocking the pipeline.
+- **Streaming analytics:** Spark Structured Streaming jobs aggregate note activity (1- and 5-minute windows) and Google sync health (10- and 30-minute windows), publishing results back to Kafka.
+- **Hybrid search:** Elasticsearch BM25 keyword search and kNN vector search over Vertex AI embeddings (`text-embedding-004`), fused with reciprocal rank fusion across notes, Gmail, and Drive. Search degrades to keyword-only without embeddings and to PostgreSQL without Elasticsearch.
+- **Observability:** Prometheus metrics for request rate, errors, latency histograms, and business counters, with a provisioned Grafana dashboard.
+- **CI:** GitHub Actions runs backend and frontend tests with Codecov coverage, lint, and production builds on every push and pull request.
+- **Kubernetes:** manifests for the full stack, with a Horizontal Pod Autoscaler scaling the backend from 2 to 5 replicas.
 
 ---
 
@@ -37,12 +48,18 @@
 ### Backend
 | Technology | Version |
 |------------|---------|
-| NestJS | 10 |
-| Prisma ORM | 5 |
+| NestJS | 11 |
+| Prisma ORM | 6 |
 | PostgreSQL | 16 |
 | Elasticsearch | 8 |
 | KafkaJS | 2 |
-| Google Vertex AI | Gemini 1.5 |
+
+### AI Models
+| Model | Used for |
+|-------|----------|
+| Gemini 1.5 Pro (Vertex AI) | Answering questions from your notes |
+| text-embedding-004 (Vertex AI) | Note embeddings for semantic indexing |
+| Llama 3 70B (Groq) | Summaries, rephrasing, and task extraction |
 
 ### Event Streaming & Analytics
 | Technology | Purpose |
@@ -86,8 +103,8 @@ ScribblyAi/
 │   ├── src/
 │   │   ├── notes/              # Notes CRUD
 │   │   ├── folders/            # Folder management
-│   │   ├── search/             # Hybrid search (BM25 + Vector)
-│   │   ├── ai/                 # AI features
+│   │   ├── search/             # Hybrid search, indexing & Q&A
+│   │   ├── ai/                 # Summaries, rephrasing, tasks (Groq)
 │   │   ├── auth/               # Authentication
 │   │   ├── connectors/         # Google integrations
 │   │   ├── calendar/           # Calendar module
@@ -98,7 +115,7 @@ ScribblyAi/
 │   │   │   └── interfaces/     # Event types
 │   │   ├── analytics/          # Real-time metrics
 │   │   ├── elasticsearch/      # Search client
-│   │   ├── vertex-ai/          # AI client
+│   │   ├── vertex-ai/          # Gemini + embeddings client
 │   │   ├── metrics/            # Prometheus metrics
 │   │   ├── prisma/             # Database ORM
 │   │   └── test/               # Test utilities & mocks
@@ -196,29 +213,29 @@ ScribblyAi/
 ### Kafka Event Flow
 
 ```
-┌──────────────────────────────────────────────────────────────────────────┐
-│                           KAFKA TOPICS                                    │
-├──────────────────────────────────────────────────────────────────────────┤
-│                                                                          │
-│  scribbly.notes.events ──────► IndexingConsumer ──────► Elasticsearch   │
-│         │                                                                │
-│         └────────────────────► AuditLogConsumer ──────► Audit Trail     │
-│                                                                          │
-│  scribbly.sync.jobs ─────────► SyncWorkerConsumer ────► Google APIs     │
-│         │                                                                │
-│         └────────────────────► scribbly.sync.results                    │
-│                                                                          │
-│  scribbly.analytics.events ──► AnalyticsConsumer ─────► Aggregates      │
-│                                       │                                  │
-│                                       ▼                                  │
-│                                 Spark Streaming                          │
-│                                       │                                  │
-│                                       ▼                                  │
-│                          scribbly.analytics.aggregates                   │
-│                                                                          │
-│  *.dlq ──────────────────────► DlqConsumer ───────────► Error Handling  │
-│                                                                          │
-└──────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────────────────┐
+│                                      KAFKA TOPICS                                     │
+├───────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                       │
+│  scribbly.notes.events ──────► IndexingConsumer ─────► Elasticsearch                  │
+│                                                                                       │
+│  scribbly.audit.log ─────────► AuditLogConsumer ─────► Audit Trail                    │
+│                                                                                       │
+│  scribbly.sync.jobs ─────────► SyncWorkerConsumer ───► Google APIs                    │
+│                                        │                                              │
+│                                        └─────────────► scribbly.sync.results          │
+│                                                                                       │
+│  scribbly.analytics.events ──► AnalyticsConsumer ────► AnalyticsMetric (PostgreSQL)   │
+│                                                                                       │
+│  scribbly.notes.events ─┐                                                             │
+│                         ├────► Spark Streaming ──────► scribbly.analytics.aggregates  │
+│  scribbly.sync.results ─┘                                        │                    │
+│                                                                  ▼                    │
+│                                                           Analytics API               │
+│                                                                                       │
+│  *.dlq ──────────────────────► DlqConsumer ──────────► Retry / FailedJob              │
+│                                                                                       │
+└───────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Spark Analytics Pipeline
@@ -234,50 +251,58 @@ ScribblyAi/
 │ sync.results ───┼────►│ sync_analytics  │────►│ Sync Health     │
 │                 │     │    .py          │     │ Metrics         │
 │                 │     │                 │     │                 │
-└─────────────────┘     │  5-min windows  │     │ analytics.      │
+└─────────────────┘     │ 1–30 min windows│     │ analytics.      │
                         │  Aggregations   │     │ aggregates      │
                         └─────────────────┘     └─────────────────┘
 ```
 
 ### Search Architecture
 
+**Write path (indexing):**
+
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         HYBRID SEARCH                                    │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  User Query: "What did we discuss about the roadmap?"                   │
-│                           │                                             │
-│                           ▼                                             │
-│                  ┌─────────────────┐                                    │
-│                  │   Vertex AI     │                                    │
-│                  │  Embeddings     │                                    │
-│                  └────────┬────────┘                                    │
-│                           │                                             │
-│           ┌───────────────┴───────────────┐                             │
-│           │                               │                             │
-│           ▼                               ▼                             │
-│   ┌───────────────┐               ┌───────────────┐                     │
-│   │  BM25 Search  │               │ Vector Search │                     │
-│   │  (Keywords)   │               │  (Semantic)   │                     │
-│   └───────┬───────┘               └───────┬───────┘                     │
-│           │                               │                             │
-│           └───────────────┬───────────────┘                             │
-│                           │                                             │
-│                           ▼                                             │
-│                  ┌─────────────────┐                                    │
-│                  │ Reciprocal Rank │                                    │
-│                  │     Fusion      │                                    │
-│                  └────────┬────────┘                                    │
-│                           │                                             │
-│                           ▼                                             │
-│                  ┌─────────────────┐                                    │
-│                  │   Gemini LLM    │                                    │
-│                  │   Response      │                                    │
-│                  └─────────────────┘                                    │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘
+Note saved ──► scribbly.notes.events ──► IndexingConsumer
+                                              │
+                                              ▼
+                               Vertex AI text-embedding-004
+                                              │
+                                              ▼
+                          Elasticsearch (dense_vector, cosine)
+
+        on failure (after retries with backoff) ──► scribbly.indexing.commands.dlq ──► DlqConsumer
 ```
+
+**Read path (hybrid search and Q&A):**
+
+```
+                         Query
+                           │
+           ┌───────────────┴───────────────┐
+           │                               │
+           ▼                               ▼
+   ┌───────────────┐              ┌─────────────────┐
+   │  BM25 Search  │              │ Vertex AI query │
+   │  (keywords,   │              │    embedding    │
+   │ fuzzy match)  │              └────────┬────────┘
+   └───────┬───────┘                       ▼
+           │                      ┌─────────────────┐
+           │                      │   kNN Search    │
+           │                      │ (cosine, top 50)│
+           │                      └────────┬────────┘
+           └───────────────┬───────────────┘
+                           ▼
+                  ┌─────────────────┐
+                  │ Reciprocal Rank │
+                  │ Fusion (k = 60) │
+                  └────────┬────────┘
+                           │
+                           ├──► /search/hybrid results
+                           │
+                           ▼
+              Gemini 1.5 Pro answers from the top 5
+```
+
+Both searches are filtered to the user's own documents and the selected providers (notes, Gmail, Drive). If the query can't be embedded, search runs BM25 only; if Elasticsearch is unavailable, it falls back to a PostgreSQL text match. After changing the embedding model, `POST /search/reindex` re-embeds the current user's notes.
 
 ---
 
@@ -293,8 +318,8 @@ ScribblyAi/
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/Aadhavm10/ScribbleAi.git
-cd ScribbleAi
+git clone https://github.com/Aadhavm10/ScribblyAi.git
+cd ScribblyAi
 
 # Backend
 cd backend && npm install
@@ -313,9 +338,13 @@ GOOGLE_CLIENT_ID="..."
 GOOGLE_CLIENT_SECRET="..."
 GCP_PROJECT_ID="..."
 VERTEX_AI_LOCATION="us-central1"
+GOOGLE_APPLICATION_CREDENTIALS="./gcp-service-account.json"
+EMBEDDING_MODEL="text-embedding-004"
 ELASTICSEARCH_URL="https://..."
 ELASTICSEARCH_API_KEY="..."
 TOKEN_ENCRYPTION_KEY="..."
+JWT_SECRET="..."
+GROQ_API_KEY="..."
 KAFKA_BROKERS="localhost:9092"
 KAFKA_ENABLED="true"
 ```
@@ -380,9 +409,6 @@ cd backend && npm run test:cov
 
 # Frontend tests
 cd frontend && npm run test
-
-# E2E tests
-cd backend && npm run test:e2e
 ```
 
 ### Test Structure
@@ -511,7 +537,7 @@ kubectl get hpa -n scribbly
 
 ### Backend Metrics
 
-The backend exposes Prometheus metrics at `/metrics`:
+The backend exposes Prometheus metrics at `/metrics` (via `prom-client` and a request interceptor). Prometheus and Grafana run in the Kubernetes deployment, from `k8s/monitoring/`.
 
 | Metric | Type | Description |
 |--------|------|-------------|
@@ -519,7 +545,9 @@ The backend exposes Prometheus metrics at `/metrics`:
 | `http_request_duration_seconds` | Histogram | Request latency (P50, P95, P99) |
 | `http_request_errors_total` | Counter | Total error responses |
 | `notes_created_total` | Counter | Business metric: notes created |
-| `search_queries_total` | Counter | Business metric: search queries |
+| `notes_updated_total` | Counter | Business metric: notes updated |
+| `notes_deleted_total` | Counter | Business metric: notes deleted |
+| `search_queries_total` | Counter | Search queries by mode (`hybrid`, `keyword`, `database`) |
 | `websocket_connections_active` | Gauge | Active WebSocket connections |
 
 ### Access Dashboards
@@ -537,35 +565,18 @@ kubectl port-forward svc/grafana-service 3001:3000 -n scribbly
 
 ### Grafana Dashboard
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                SCRIBBLYAI BACKEND METRICS                        │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
-│  │  QPS: 150    │  │ Error: 0.1%  │  │ P99: 120ms   │          │
-│  └──────────────┘  └──────────────┘  └──────────────┘          │
-│                                                                 │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │                Request Latency Distribution               │  │
-│  │  ████████████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░  │  │
-│  │  P50: 25ms    P95: 80ms    P99: 120ms                    │  │
-│  └──────────────────────────────────────────────────────────┘  │
-│                                                                 │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │                 Requests by Status Code                   │  │
-│  │  200 ████████████████████████████████████ 95%            │  │
-│  │  201 ██████ 3%                                           │  │
-│  │  500 █ 0.1%                                              │  │
-│  └──────────────────────────────────────────────────────────┘  │
-│                                                                 │
-│  ┌────────────┐  ┌────────────┐  ┌────────────┐               │
-│  │ Notes(24h) │  │ Search/min │  │ WebSockets │               │
-│  │    1,234   │  │     45     │  │     12     │               │
-│  └────────────┘  └────────────┘  └────────────┘               │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
+Provisioned from `k8s/monitoring/grafana-dashboard.yaml`:
+
+| Panel | PromQL |
+|-------|--------|
+| Request Rate (QPS) | `sum(rate(http_requests_total[5m]))` |
+| Error Rate (%) | `sum(rate(http_request_errors_total[5m])) / sum(rate(http_requests_total[5m])) * 100` |
+| P99 Latency | `histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))` |
+| Latency Distribution | P50, P95, and P99 from the same histogram |
+| Requests by Status Code | `sum(rate(http_requests_total[5m])) by (status)` |
+| Notes Created (24h) | `sum(increase(notes_created_total[24h]))` |
+| Search Queries/min | `sum(rate(search_queries_total[5m])) * 60` |
+| WebSocket Connections | `websocket_connections_active` |
 
 ---
 

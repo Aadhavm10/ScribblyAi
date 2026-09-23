@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, Inject, forwardRef, Logger } from '@nest
 import { PrismaService } from '../prisma/prisma.service';
 import { IndexingService } from '../search/indexing.service';
 import { NoteEventProducer } from '../kafka/producers/note-event.producer';
+import { MetricsService } from '../metrics/metrics.service';
 
 export interface CreateNoteDto {
   title: string;
@@ -27,6 +28,7 @@ export class NotesService {
     @Inject(forwardRef(() => IndexingService))
     private readonly indexing: IndexingService,
     private readonly noteEventProducer: NoteEventProducer,
+    private readonly metrics: MetricsService,
   ) {}
 
   private isDbAvailable(): boolean {
@@ -123,6 +125,7 @@ export class NotesService {
       },
       include: { tags: { include: { tag: true } } },
     });
+    this.metrics.notesCreated.inc();
 
     // Publish note created event to Kafka (triggers indexing via consumer)
     const published = await this.noteEventProducer.publishNoteCreated({
@@ -187,6 +190,7 @@ export class NotesService {
         },
         include: { tags: { include: { tag: true } } },
       });
+      this.metrics.notesUpdated.inc();
 
       // Publish note updated event to Kafka (triggers reindexing via consumer)
       const published = await this.noteEventProducer.publishNoteUpdated({
@@ -247,6 +251,7 @@ export class NotesService {
       });
 
       await this.prisma.note.delete({ where: { id } });
+      this.metrics.notesDeleted.inc();
 
       // Publish note deleted event to Kafka (triggers index deletion via consumer)
       if (note) {

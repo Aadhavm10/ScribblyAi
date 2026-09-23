@@ -1,6 +1,7 @@
 import { Controller, Post, Get, Body, Query, UseGuards } from '@nestjs/common';
 import { SearchService } from './search.service';
 import { ConversationalService } from './conversational.service';
+import { IndexingService } from './indexing.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
@@ -10,6 +11,7 @@ export class SearchController {
   constructor(
     private searchService: SearchService,
     private conversationalService: ConversationalService,
+    private indexingService: IndexingService,
   ) {}
 
   @Post('hybrid')
@@ -18,6 +20,12 @@ export class SearchController {
     @CurrentUser() user: any,
   ) {
     return this.searchService.hybridSearch(body.query, user.id, body.limit, body.providers);
+  }
+
+  // Re-embeds all of the current user's notes, e.g. after switching embedding models
+  @Post('reindex')
+  async reindex(@CurrentUser() user: any) {
+    return this.indexingService.bulkIndexNotes(user.id);
   }
 
   @Post('conversational')

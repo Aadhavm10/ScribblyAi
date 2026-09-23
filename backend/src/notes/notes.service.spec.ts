@@ -4,10 +4,12 @@ import { NotesService } from './notes.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { IndexingService } from '../search/indexing.service';
 import { NoteEventProducer } from '../kafka/producers/note-event.producer';
+import { MetricsService } from '../metrics/metrics.service';
 import {
   createMockPrismaService,
   createMockIndexingService,
   createMockNoteEventProducer,
+  createMockMetricsService,
 } from '../test/mock-factory';
 import {
   mockNote,
@@ -23,11 +25,13 @@ describe('NotesService', () => {
   let prisma: ReturnType<typeof createMockPrismaService>;
   let indexing: ReturnType<typeof createMockIndexingService>;
   let noteEventProducer: ReturnType<typeof createMockNoteEventProducer>;
+  let metrics: ReturnType<typeof createMockMetricsService>;
 
   beforeEach(async () => {
     prisma = createMockPrismaService();
     indexing = createMockIndexingService();
     noteEventProducer = createMockNoteEventProducer();
+    metrics = createMockMetricsService();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -35,6 +39,7 @@ describe('NotesService', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: IndexingService, useValue: indexing },
         { provide: NoteEventProducer, useValue: noteEventProducer },
+        { provide: MetricsService, useValue: metrics },
       ],
     }).compile();
 
@@ -131,6 +136,7 @@ describe('NotesService', () => {
           title: mockNote.title,
         }),
       );
+      expect(metrics.notesCreated.inc).toHaveBeenCalledTimes(1);
     });
 
     it('should create note with tags', async () => {
@@ -193,6 +199,7 @@ describe('NotesService', () => {
           previousContent: mockNote.content,
         }),
       );
+      expect(metrics.notesUpdated.inc).toHaveBeenCalledTimes(1);
     });
 
     it('should update note tags when provided', async () => {
@@ -269,6 +276,7 @@ describe('NotesService', () => {
         noteId: 'note-1',
         userId: mockNote.userId,
       });
+      expect(metrics.notesDeleted.inc).toHaveBeenCalledTimes(1);
     });
 
     it('should fallback to direct index deletion when Kafka is unavailable', async () => {
