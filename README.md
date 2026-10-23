@@ -19,16 +19,45 @@
 
 </div>
 
-ScribblyAi is an AI memory assistant for your notes. Write and organize notes in folders, connect your Google account (Gmail, Drive, Docs, and Calendar), and ask questions in plain English: Gemini answers from your own notes. Built-in AI tools summarize notes, rephrase text (formal, casual, or concise), and extract tasks.
+**An AI memory assistant for your notes.** Write and organize notes in folders, connect your Google account (Gmail, Drive, Docs, and Calendar), and ask questions in plain English. Gemini answers from your own notes, and built-in AI tools summarize notes, rephrase text (formal, casual, or concise), and extract tasks.
+
+<!--
+  Screenshots: save images to docs/screenshots/ and delete this comment's opening and closing lines.
+
+<p align="center">
+  <img src="docs/screenshots/ask-your-notes.png" alt="Asking a question and getting an answer from your own notes" width="49%">
+  <img src="docs/screenshots/live-collaboration.png" alt="Two users editing the same note with live cursors" width="49%">
+</p>
+-->
+
+## Features
+
+- **Ask your notes:** type a question and get an answer grounded in your own notes, Gmail, and Drive.
+- **Hybrid search:** finds both exact keywords and notes with similar meaning.
+- **AI writing tools:** summaries, rephrasing in three tones, and task extraction.
+- **Real-time collaboration:** live cursors, presence, and typing indicators when people edit the same note.
+- **Google integrations:** Gmail, Drive, Docs, and Calendar, with a built-in calendar view.
+- **Folders and organization** for keeping notes structured.
 
 ## Highlights
 
-- **Event-driven backend:** NestJS services publish to Kafka, and dedicated consumers handle search indexing, audit logging, Google sync, and analytics. Failed messages go to dead-letter topics instead of blocking the pipeline.
-- **Streaming analytics:** Spark Structured Streaming jobs aggregate note activity (1- and 5-minute windows) and Google sync health (10- and 30-minute windows), publishing results back to Kafka.
+- **Event-driven backend:** NestJS services publish to Kafka (10 topics, 5 consumer groups), and dedicated consumers handle search indexing, audit logging, Google sync, and analytics.
+- **Dead-letter handling:** failed messages land in one of 3 dead-letter topics, are retried up to 5 times with exponential backoff, and are then saved to PostgreSQL as failed jobs instead of being dropped.
 - **Hybrid search:** Elasticsearch BM25 keyword search and kNN vector search over Vertex AI embeddings (`text-embedding-004`), fused with reciprocal rank fusion across notes, Gmail, and Drive. Search degrades to keyword-only without embeddings and to PostgreSQL without Elasticsearch.
+- **Two language models, each for its own job:** Gemini 1.5 Pro answers questions from retrieved notes; Groq Llama 3 70B handles summaries, rephrasing, and task extraction.
+- **Real-time collaboration:** a Socket.IO gateway broadcasts cursor positions, presence, and typing indicators to everyone in a note, with edits recorded in an audit trail.
+- **Security:** Google OAuth sign-in, JWT sessions with Passport guards, and Google access tokens encrypted at rest with AES-256-GCM and refreshed automatically.
+- **Streaming analytics:** Spark Structured Streaming jobs aggregate note activity (1- and 5-minute windows) and Google sync health (10- and 30-minute windows), publishing results back to Kafka.
 - **Observability:** Prometheus metrics for request rate, errors, latency histograms, and business counters, with a provisioned Grafana dashboard.
 - **CI:** GitHub Actions runs backend and frontend tests with Codecov coverage, lint, and production builds on every push and pull request.
 - **Kubernetes:** manifests for the full stack, with a Horizontal Pod Autoscaler scaling the backend from 2 to 5 replicas.
+
+## Design Decisions
+
+- **Why Kafka?** Indexing a note means calling an embedding model, and Google sync calls external APIs. Both are slow and can fail. Publishing events lets a save return immediately while consumers do that work in the background, and a failure in one consumer doesn't block the others.
+- **Why hybrid search?** Keyword search misses notes that say the same thing in different words; vector search can miss exact names and terms. Fusing both with reciprocal rank fusion covers each one's blind spot without tuning score weights.
+- **Why graceful fallbacks?** If embeddings or Elasticsearch are unavailable, search falls back to keyword-only or PostgreSQL instead of failing, so the core app keeps working.
+- **Honest scope note:** I built ScribblyAi to learn event-driven architecture, stream processing, and deployment. At its current scale, a single service with a job queue would be enough; Kafka, Spark, and Kubernetes are here so I could build and understand each layer end to end.
 
 ---
 
@@ -329,6 +358,8 @@ cd ../frontend && npm install
 
 ### 2. Environment Setup
 
+Copy `frontend/env.example` to `frontend/.env.local` and `backend/gcp-service-account.json.example` to `backend/gcp-service-account.json`, then fill in the values below.
+
 **backend/.env**
 ```env
 DATABASE_URL="postgresql://..."
@@ -555,7 +586,7 @@ The backend exposes Prometheus metrics at `/metrics` (via `prom-client` and a re
 # Prometheus UI
 minikube service prometheus-service -n scribbly
 
-# Grafana (admin/admin)
+# Grafana (change the default login in k8s/monitoring/ before exposing it)
 minikube service grafana-service -n scribbly
 
 # Or with kubectl port-forward
@@ -579,21 +610,12 @@ Provisioned from `k8s/monitoring/grafana-dashboard.yaml`:
 
 ---
 
-## Keep-Alive Setup (Free Tier)
+## Hosting Note
 
-Render and Supabase free tiers spin down after inactivity. To keep services warm:
-
-1. The backend has a `/health` endpoint that pings the database
-2. Set up a free cron job at [cron-job.org](https://cron-job.org):
-   - **URL:** `https://your-render-url.onrender.com/health`
-   - **Schedule:** Every 5 minutes
-
-This keeps both Render (prevents cold starts) and Supabase (prevents database pausing) active.
+The hosted backend runs on Render and Supabase free tiers, which pause after inactivity. A scheduled ping to the backend's `/health` endpoint keeps both awake.
 
 ---
 
-<div align="center">
+## License
 
-**MIT License**
-
-</div>
+MIT. See [LICENSE](LICENSE).
