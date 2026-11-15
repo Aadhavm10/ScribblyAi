@@ -3,7 +3,7 @@
 <div align="center">
 
 ![ScribblyAi](https://img.shields.io/badge/ScribblyAi-AI%20Memory%20Assistant-6366f1?style=for-the-badge&logoColor=white)
-![Version](https://img.shields.io/badge/version-1.0.0-blue?style=for-the-badge)
+[![CI](https://github.com/Aadhavm10/ScribblyAi/actions/workflows/ci.yml/badge.svg)](https://github.com/Aadhavm10/ScribblyAi/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
@@ -44,7 +44,7 @@
 - **Event-driven backend:** NestJS services publish to Kafka (10 topics, 5 consumer groups), and dedicated consumers handle search indexing, audit logging, Google sync, and analytics.
 - **Dead-letter handling:** failed messages land in one of 3 dead-letter topics, are retried up to 5 times with exponential backoff, and are then saved to PostgreSQL as failed jobs instead of being dropped.
 - **Hybrid search:** Elasticsearch BM25 keyword search and kNN vector search over Vertex AI embeddings (`text-embedding-004`), fused with reciprocal rank fusion across notes, Gmail, and Drive. Search degrades to keyword-only without embeddings and to PostgreSQL without Elasticsearch.
-- **Two language models, each for its own job:** Gemini 1.5 Pro answers questions from retrieved notes; Groq Llama 3 70B handles summaries, rephrasing, and task extraction.
+- **Two language models, each for its own job:** Gemini on Vertex AI answers questions from retrieved notes; a Groq-hosted model handles summaries, rephrasing, and task extraction. Both are set by environment variable (`GEMINI_MODEL`, `GROQ_MODEL`).
 - **Real-time collaboration:** a Socket.IO gateway broadcasts cursor positions, presence, and typing indicators to everyone in a note, with edits recorded in an audit trail.
 - **Security:** Google OAuth sign-in, JWT sessions with Passport guards, and Google access tokens encrypted at rest with AES-256-GCM and refreshed automatically.
 - **Streaming analytics:** Spark Structured Streaming jobs aggregate note activity (1- and 5-minute windows) and Google sync health (10- and 30-minute windows), publishing results back to Kafka.
@@ -85,9 +85,11 @@
 ### AI Models
 | Model | Used for |
 |-------|----------|
-| Gemini 1.5 Pro (Vertex AI) | Answering questions from your notes |
+| Gemini (Vertex AI), default `gemini-3.8-flash` | Answering questions from your notes |
 | text-embedding-004 (Vertex AI) | Note embeddings for semantic indexing |
-| Llama 3 70B (Groq) | Summaries, rephrasing, and task extraction |
+| Groq, default `openai/gpt-oss-120b` | Summaries, rephrasing, and task extraction |
+
+The app originally ran Gemini 1.5 Pro and Llama 3 70B on Groq; both providers have since retired those models, so the defaults moved and either can be overridden with `GEMINI_MODEL` or `GROQ_MODEL`. Vertex AI lists `text-embedding-004` for retirement on April 1, 2027; switching to a newer embedding model changes the vector size, so plan a reindex.
 
 ### Event Streaming & Analytics
 | Technology | Purpose |
@@ -327,7 +329,7 @@ Note saved ──► scribbly.notes.events ──► IndexingConsumer
                            ├──► /search/hybrid results
                            │
                            ▼
-              Gemini 1.5 Pro answers from the top 5
+              Gemini answers from the top 5
 ```
 
 Both searches are filtered to the user's own documents and the selected providers (notes, Gmail, Drive). If the query can't be embedded, search runs BM25 only; if Elasticsearch is unavailable, it falls back to a PostgreSQL text match. After changing the embedding model, `POST /search/reindex` re-embeds the current user's notes.
@@ -370,11 +372,13 @@ GCP_PROJECT_ID="..."
 VERTEX_AI_LOCATION="us-central1"
 GOOGLE_APPLICATION_CREDENTIALS="./gcp-service-account.json"
 EMBEDDING_MODEL="text-embedding-004"
+GEMINI_MODEL="gemini-3.8-flash"        # optional
 ELASTICSEARCH_URL="https://..."
 ELASTICSEARCH_API_KEY="..."
 TOKEN_ENCRYPTION_KEY="..."
 JWT_SECRET="..."
 GROQ_API_KEY="..."
+GROQ_MODEL="openai/gpt-oss-120b"       # optional
 KAFKA_BROKERS="localhost:9092"
 KAFKA_ENABLED="true"
 ```

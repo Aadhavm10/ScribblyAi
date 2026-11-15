@@ -24,10 +24,15 @@ export interface AiTasksResult {
 export class AiService {
   private readonly logger = new Logger(AiService.name);
   private openai: OpenAI;
+  private model: string;
 
   constructor(private configService: ConfigService) {
     const groqApiKey = this.configService.get<string>('GROQ_API_KEY');
     const groqBaseUrl = this.configService.get<string>('GROQ_BASE_URL') || 'https://api.groq.com/openai/v1';
+    // llama3-70b-8192 was shut down by Groq on Aug 30, 2025 and its Llama successors in 2026,
+    // so the model is configurable instead of hardcoded.
+    this.model =
+      this.configService.get<string>('GROQ_MODEL') || 'openai/gpt-oss-120b';
 
     if (!groqApiKey) {
       this.logger.warn('GROQ_API_KEY not configured. AI features will not work.');
@@ -40,7 +45,21 @@ export class AiService {
       baseURL: groqBaseUrl,
     });
 
-    this.logger.log('AI service initialized with Groq');
+    this.logger.log(`AI service initialized with Groq (${this.model})`);
+  }
+
+  /**
+   * Model settings shared by every completion. GPT-OSS models reason before answering and
+   * Groq counts that against the token limit, so they get low reasoning effort and extra
+   * headroom; the answer itself still arrives in message.content.
+   */
+  private completionOptions(maxTokens: number) {
+    const reasoning = this.model.startsWith('openai/gpt-oss');
+    return {
+      model: this.model,
+      max_tokens: reasoning ? maxTokens + 1024 : maxTokens,
+      ...(reasoning ? { reasoning_effort: 'low' as const } : {}),
+    };
   }
 
   async summarizeNote(title: string, content: string): Promise<AiSummaryResult> {
@@ -60,7 +79,7 @@ export class AiService {
     
     try {
       const response = await this.openai.chat.completions.create({
-        model: 'llama3-70b-8192',
+        ...this.completionOptions(300),
         messages: [
           {
             role: 'system',
@@ -81,7 +100,6 @@ Please respond with:
 Keep it concise and actionable.`,
           },
         ],
-        max_tokens: 300,
         temperature: 0.3,
       });
 
@@ -138,7 +156,7 @@ Keep it concise and actionable.`,
 
     try {
       const response = await this.openai.chat.completions.create({
-        model: 'llama3-70b-8192',
+        ...this.completionOptions(Math.max(200, text.length * 2)),
         messages: [
           {
             role: 'system',
@@ -149,7 +167,6 @@ Keep it concise and actionable.`,
             content: `Please rephrase this text in a ${style} style:\n\n${text}`,
           },
         ],
-        max_tokens: Math.max(200, text.length * 2),
         temperature: 0.4,
       });
 
@@ -190,7 +207,7 @@ Keep it concise and actionable.`,
 
     try {
       const response = await this.openai.chat.completions.create({
-        model: 'llama3-70b-8192',
+        ...this.completionOptions(400),
         messages: [
           {
             role: 'system',
@@ -206,7 +223,6 @@ Example: [{"task": "Complete report", "priority": "high"}]`,
             content: `Extract tasks from this content:\n\n${content}`,
           },
         ],
-        max_tokens: 400,
         temperature: 0.2,
       });
 
