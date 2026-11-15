@@ -43,8 +43,11 @@ export class VertexAiService {
         location: location,
       });
 
+      // gemini-1.5-pro was retired on Vertex AI in 2025, so the model is configurable.
+      const geminiModel =
+        this.configService.get<string>('GEMINI_MODEL') || 'gemini-3.8-flash';
       this.geminiModel = this.vertexAI.preview.getGenerativeModel({
-        model: 'gemini-1.5-pro',
+        model: geminiModel,
         generationConfig: {
           temperature: 0.7,
           topP: 0.95,
